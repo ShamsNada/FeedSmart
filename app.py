@@ -818,10 +818,5 @@ def summary(form_id):
 
 
 if __name__ == '__main__':
-    host = os.environ.get('FLASK_RUN_HOST', '0.0.0.0')
-    port = int(os.environ.get('FLASK_RUN_PORT', 5000))
-    debug = os.environ.get('FLASK_DEBUG', '1').lower() in ('1', 'true', 'yes', 'on')
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not debug:
-        start_quick_tunnel_if_available(port)
-    app.run(host=host, port=port, debug=debug)
-
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
