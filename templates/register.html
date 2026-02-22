@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="page auth-page">
+        <section class="hero reveal">
+            <h1>Create Account</h1>
+            <p>Set up your login to access the feedback dashboard.</p>
+        </section>
+
+        <section class="section reveal delay-1 auth-card">
+            <h2 class="section-title">Register</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ 'alert-error' if category == 'error' else 'alert-success' }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="post" class="form-shell">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input id="username" name="username" required>
+                </div>
+                <div class="field">
+                    <label for="password">Password (min 6 chars)</label>
+                    <input id="password" type="password" name="password" minlength="6" required>
+                </div>
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary">Create account</button>
+                    <a href="/login" class="btn btn-secondary">Back to login</a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+<script>
+function applyTheme(mode) {
+    document.body.classList.toggle('dark-theme', mode === 'dark');
+}
+
+applyTheme(localStorage.getItem('theme') === 'dark' ? 'dark' : 'light');
+</script>
+</body>
+</html>

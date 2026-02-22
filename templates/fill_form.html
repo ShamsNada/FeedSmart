@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fill Form</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="page">
+        <header class="topbar reveal">
+            <a class="brand" href="{{ '/home' if current_username else '/' }}">
+                <span class="brand-badge">FB</span>
+                <span>FeedSmart</span>
+            </a>
+            <nav class="nav-links">
+                {% if current_username %}
+                    <span class="user-pill">@{{ current_username }}</span>
+                {% endif %}
+                <button type="button" class="btn btn-secondary theme-toggle" onclick="toggleTheme()">Theme</button>
+                {% if public_mode %}
+                    {% if current_username %}
+                        <a href="/home" class="btn-link btn btn-secondary">Dashboard</a>
+                        <a href="/logout" class="btn-link btn btn-secondary">Logout</a>
+                    {% else %}
+                        <a href="/login" class="btn-link btn btn-secondary">Login</a>
+                    {% endif %}
+                {% else %}
+                    <a href="/home" class="btn-link btn btn-secondary">Home</a>
+                    <a href="/summary/{{ form.id }}" class="btn-link btn btn-accent">Summary</a>
+                    <a href="/logout" class="btn-link btn btn-secondary">Logout</a>
+                {% endif %}
+            </nav>
+        </header>
+
+        <section class="hero reveal delay-1">
+            <h2>{{ form.title }}</h2>
+            <p>
+                {% if public_mode %}
+                    Submit your feedback below. You can stay anonymous or share your name.
+                {% else %}
+                    Owner preview mode. This is how the public response form looks.
+                {% endif %}
+            </p>
+            {% if form.closing_at %}
+                <p>Closes at: {{ form.closing_at.strftime('%d %b %Y %H:%M') }}</p>
+            {% endif %}
+        </section>
+
+        <section class="section reveal delay-2">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ 'alert-error' if category == 'error' else 'alert-success' }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if share_url %}
+                <div class="share-banner">
+                    <p class="hint">Public Link</p>
+                    <div class="share-row">
+                        <input id="share-form-link" value="{{ share_url }}" readonly>
+                        <button type="button" class="btn btn-secondary" onclick="copyShare('share-form-link')">Copy Link</button>
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if is_closed %}
+                <div class="alert alert-error">This form is closed and no longer accepts responses.</div>
+            {% endif %}
+
+            <form method="post" class="form-shell">
+                <div class="field">
+                    <label for="username">Mail ID (optional)</label>
+                    <input id="username" name="username" placeholder="Enter your mail id " {% if is_closed %}disabled{% endif %}>
+                </div>
+                <label class="option-row">
+                    <input type="checkbox" name="anonymous" {% if is_closed %}disabled{% endif %}>
+                    <span>Submit anonymously</span>
+                </label>
+
+                {% for q in questions %}
+                <div class="question-card reveal delay-3">
+                    <div class="field">
+                        <label>{{ loop.index }}. {{ q.text }}</label>
+
+                        {% if q.qtype == 'text' %}
+                            <input name="q_{{ q.id }}" placeholder="Type your answer" {% if is_closed %}disabled{% endif %}>
+                        {% elif q.qtype == 'longtext' %}
+                            <textarea name="q_{{ q.id }}" rows="4" placeholder="Type your detailed answer" {% if is_closed %}disabled{% endif %}></textarea>
+                        {% elif q.qtype == 'rating' %}
+                            <select name="q_{{ q.id }}" {% if is_closed %}disabled{% endif %}>
+                                <option value="">Select rating</option>
+                                <option>1</option>
+                                <option>2</option>
+                                <option>3</option>
+                                <option>4</option>
+                                <option>5</option>
+                            </select>
+                        {% elif q.qtype == 'mcq' %}
+                            {% for opt in q.options.split(',') %}
+                                <label class="option-row">
+                                    <input type="radio" name="q_{{ q.id }}" value="{{ opt.strip() }}" {% if is_closed %}disabled{% endif %}>
+                                    <span>{{ opt.strip() }}</span>
+                                </label>
+                            {% endfor %}
+                        {% elif q.qtype == 'checkbox' %}
+                            {% for opt in q.options.split(',') %}
+                                <label class="option-row">
+                                    <input type="checkbox" name="q_{{ q.id }}" value="{{ opt.strip() }}" {% if is_closed %}disabled{% endif %}>
+                                    <span>{{ opt.strip() }}</span>
+                                </label>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary" {% if is_closed %}disabled{% endif %}>Submit Feedback</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+<script>
+function applyTheme(mode) {
+    document.body.classList.toggle('dark-theme', mode === 'dark');
+    const btn = document.querySelector('.theme-toggle');
+    if (btn) btn.textContent = mode === 'dark' ? 'Light Mode' : 'Dark Mode';
+}
+
+function toggleTheme() {
+    const current = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', next);
+    applyTheme(next);
+}
+
+function copyShare(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.select();
+    input.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+}
+
+applyTheme(localStorage.getItem('theme') === 'dark' ? 'dark' : 'light');
+</script>
+</body>
+</html>
+

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Feedback Home</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="page">
+        <header class="topbar reveal">
+            <a class="brand" href="/home">
+                <span class="brand-badge">FB</span>
+                <span>FeedSmart</span>
+            </a>
+            <nav class="nav-links">
+                <span class="user-pill">@{{ current_username }}</span>
+                <button type="button" class="btn btn-secondary theme-toggle" onclick="toggleTheme()">Theme</button>
+                <a href="/create" class="btn-link btn btn-accent">Create Form</a>
+                <a href="/logout" class="btn-link btn btn-secondary">Logout</a>
+            </nav>
+        </header>
+
+        <section class="hero reveal delay-1">
+            <h1>Capture Better Feedback</h1>
+            <p>Create forms, collect anonymous or logged-in feedback via share links, and track response summaries from one dashboard.</p>
+        </section>
+
+        <section class="section reveal delay-2">
+            <h2 class="section-title">Overview</h2>
+            <div class="metric-grid">
+                <article class="card metric-card">
+                    <small class="hint">Forms Created</small>
+                    <h3>{{ total_forms }}</h3>
+                </article>
+                <article class="card metric-card">
+                    <small class="hint">Total Responses</small>
+                    <h3>{{ total_responses }}</h3>
+                </article>
+                <article class="card metric-card">
+                    <small class="hint">Anonymous Responses</small>
+                    <h3>{{ total_anonymous }}</h3>
+                </article>
+            </div>
+        </section>
+
+        <section class="section reveal delay-2">
+            <h2 class="section-title">Your Forms</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ 'alert-error' if category == 'error' else 'alert-success' }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if form_cards %}
+                <div class="form-list">
+                    {% for item in form_cards %}
+                    <article class="form-item reveal delay-3">
+                        <div>
+                            <strong>{{ item.form.title }}</strong>
+                            <small class="hint">Responses: {{ item.response_count }} | Anonymous: {{ item.anonymous_count }}</small>
+                            <small class="hint">
+                                {% if item.form.closing_at %}
+                                    Closes: {{ item.form.closing_at.strftime('%d %b %Y %H:%M') }}
+                                    {% if item.is_closed %}| Status: Closed{% else %}| Status: Open{% endif %}
+                                {% else %}
+                                    Closes: Never | Status: Open
+                                {% endif %}
+                            </small>
+                            <div class="share-row">
+                                <input id="share-{{ item.form.id }}" value="{{ item.share_url }}" readonly>
+                                <button type="button" class="btn btn-secondary" onclick="copyShare('share-{{ item.form.id }}')">Copy Link</button>
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <a href="/edit/{{ item.form.id }}" class="btn btn-accent">Edit Form</a>
+                            <a href="/respond/{{ item.form.id }}" class="btn btn-primary">Public Fill</a>
+                            <a href="/summary/{{ item.form.id }}" class="btn btn-secondary">View Summary</a>
+                            <form method="post" action="/delete/{{ item.form.id }}" onsubmit="return confirm('Delete this form and all its responses?');">
+                                <button type="submit" class="btn btn-danger">Delete Form</button>
+                            </form>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty">No forms yet. Create your first form to get started.</div>
+            {% endif %}
+        </section>
+    </main>
+
+<script>
+function applyTheme(mode) {
+    document.body.classList.toggle('dark-theme', mode === 'dark');
+    const btn = document.querySelector('.theme-toggle');
+    if (btn) btn.textContent = mode === 'dark' ? 'Light Mode' : 'Dark Mode';
+}
+
+function toggleTheme() {
+    const current = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', next);
+    applyTheme(next);
+}
+
+function copyShare(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.select();
+    input.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+}
+
+applyTheme(localStorage.getItem('theme') === 'dark' ? 'dark' : 'light');
+</script>
+</body>
+</html>

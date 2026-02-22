@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Summary</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="page">
+        <header class="topbar reveal">
+            <a class="brand" href="/home">
+                <span class="brand-badge">FB</span>
+                <span>FeedSmart</span>
+            </a>
+            <nav class="nav-links">
+                <span class="user-pill">@{{ current_username }}</span>
+                <button type="button" class="btn btn-secondary theme-toggle" onclick="toggleTheme()">Theme</button>
+                <a href="/home" class="btn-link btn btn-secondary">Home</a>
+                <a href="/form/{{ form.id }}" class="btn-link btn btn-accent">Fill Form</a>
+                <a href="/logout" class="btn-link btn btn-secondary">Logout</a>
+            </nav>
+        </header>
+
+        <section class="hero reveal delay-1">
+            <h2>Summary: {{ form.title }}</h2>
+            <p>Total responses: {{ total_responses }}. Review distribution and text feedback for each question.</p>
+        </section>
+
+        <section class="section reveal delay-2">
+            <h3 class="section-title">Submission Details</h3>
+            <p class="hint">Identified submissions show provided mail ID/name. Anonymous submissions are listed separately.</p>
+
+            <h4>Identified Submissions ({{ identified_submissions|length }})</h4>
+            {% if identified_submissions %}
+                <div class="table-wrap">
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Mail ID / Name</th>
+                                {% for q in questions %}
+                                    <th>{{ loop.index }}. {{ q.text }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in identified_submissions %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ row.submitted_by }}</td>
+                                    {% for answer in row.answers %}
+                                        <td>{{ answer or '-' }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="hint">No identified submissions yet.</p>
+            {% endif %}
+
+            <h4>Anonymous Submissions ({{ anonymous_submissions|length }})</h4>
+            {% if anonymous_submissions %}
+                <div class="table-wrap">
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Submitted By</th>
+                                {% for q in questions %}
+                                    <th>{{ loop.index }}. {{ q.text }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in anonymous_submissions %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>Anonymous</td>
+                                    {% for answer in row.answers %}
+                                        <td>{{ answer or '-' }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="hint">No anonymous submissions yet.</p>
+            {% endif %}
+        </section>
+
+        <section class="section reveal delay-2">
+            <h3 class="section-title">Question Insights</h3>
+
+            <div class="grid">
+                {% for q in questions %}
+                <article class="card reveal delay-3">
+                    <h3>{{ q.text }}</h3>
+
+                    {% if stats[q.id].total == 0 %}
+                        <p class="hint">No responses yet for this question.</p>
+                    {% elif stats[q.id].mode == 'counts' %}
+                        <ul class="stats">
+                            {% for label, count in stats[q.id].counts.items() %}
+                                <li><strong>{{ label }}</strong>: {{ count }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <ul class="stats">
+                            {% for val in stats[q.id].entries %}
+                                <li>{{ val }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+<script>
+function applyTheme(mode) {
+    document.body.classList.toggle('dark-theme', mode === 'dark');
+    const btn = document.querySelector('.theme-toggle');
+    if (btn) btn.textContent = mode === 'dark' ? 'Light Mode' : 'Dark Mode';
+}
+
+function toggleTheme() {
+    const current = localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', next);
+    applyTheme(next);
+}
+
+applyTheme(localStorage.getItem('theme') === 'dark' ? 'dark' : 'light');
+</script>
+</body>
+</html>
+
